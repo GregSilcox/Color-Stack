@@ -1,12 +1,16 @@
 class Tubes
   def initialize args
     @args = args
-    @balls = args.state.balls.dup
     
     @x = args.state.x
     @y = args.state.y
     @w = args.state.w
     @h = args.state.balls_per_tube * @w
+
+    @source = []
+    @destination = []
+    @color = 0
+    @clicked = nil
   end
 
   def fill
@@ -87,21 +91,36 @@ class Tubes
     (0..@args.state.tubes_per_tray - 1).each do |i|
       # which was clicked in? ...
       if @args.inputs.mouse.inside_rect?(@args.state.tubes[i][:rect])
-        # Of all the slots in the clicked tube ...
-        (args.state.balls_per_tube - 1).downto(0).each do |j|
-          # was a ball clicked?
-          if args.state.tubes[i][:colors][j] > 0
-            return [i, j]
-          else
-            return false
-          end
-        end
+        @clicked = i
+        return true
       end
     end
-    true
+
+    return false
   end
 
+
   def source
+    # A tube needs some colors to be a source
+    return unless @args.state.tubes[@clicked][:colors].sum > 0
+
+    top = 0
+
+    # Of all the slots in the clicked tube ...
+    (@args.state.balls_per_tube - 1).downto(0).each do |j|
+      # which was the top?
+      if @args.state.tubes[@clicked][:colors][j] > 0
+        top = j
+        break
+      end
+    end
+
+    # Make the color appear above the tube
+    @color = @args.state.tubes[@clicked][:colors][top]
+
+    # Blank the source color
+    @args.state.tubes[@clicked][:colors][top] = 0
+    @args.outputs.labels << [ 10, 60, "Source: " + @clicked.to_s + ', ' + top.to_s ]
   end
 
   def destination

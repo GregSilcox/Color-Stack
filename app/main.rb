@@ -54,7 +54,7 @@ def tick args
   setup args unless args.state.once
 
   tubes = Tubes.new args
-  tubes.fill
+  tubes.fill unless args.state.once
 
   state = State.new args
   state.display
@@ -65,17 +65,18 @@ def tick args
 
   if args.inputs.mouse.click && args.inputs.mouse.inside_rect?([1180, 0, 100, 50])
     setup args
+    state.reset!
     tubes.fill
   end
 
   if tubes.clicked?
     case state.current
     when State::SOURCE
-      state.next
       tubes.source
-    when State::DESTINATION
       state.next
+    when State::DESTINATION
       tubes.destination
+      state.next
     else
       state.reset!
     end
@@ -132,5 +133,5 @@ def tick args
   # Restart current game
   # Animation
 
-  # tubes.display
+  tubes.display
 end
