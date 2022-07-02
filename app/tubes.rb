@@ -1,4 +1,6 @@
 class Tubes
+  attr_reader :color, :source
+
   def initialize args
     @args = args
     
@@ -9,62 +11,44 @@ class Tubes
 
     @source = []
     @destination = []
-    @color = 0
+    @args.state.color ||= 0
     @clicked = nil
   end
 
-  def fill
-    @args.state.tubes = []
+  def self.setup args
+    args.state.tubes = []
 
-    (0..@args.state.tubes_per_tray - 1).each do |i|
-      tx = @w * i * 2 + @x
-  
-      @args.state.tubes[i] = {
-        rect: [tx, @y, @w, @h],
-        color: [128, 128, 128, 64], # fixed tube color
-        slots: [],
-        colors: []
-      }
-  
-      (0..@args.state.balls_per_tube - 1).each do |j|
-        ty = @w * j + @y
-  
-        @args.state.tubes[i][:slots][j] = [tx, ty, @w, @w]
-        @args.state.tubes[i][:colors][j] = @args.state.balls[i * 4 + j]
-      end
+    (0..args.state.tubes_per_tray - 1).each do |i|
+      Tube.setup i, args
     end
   end
 
   def display
     @args.state.tubes.each_with_index do |tube, i|
-      @args.outputs.solids << {
-        x: tube[:rect][0] - 2,
-        y: tube[:rect][1] - 2,
-        w: tube[:rect][2] + 4,
-        h: tube[:rect][3] + 4,
-        r: tube[:color][0],
-        g: tube[:color][1],
-        b: tube[:color][2],
-        a: tube[:color][3]
-      }
+      # @args.outputs.solids << tube.output
 
-      @args.state.tubes[i][:colors].each_with_index do |color, j|
-        color_i = @args.state.tubes[i][:colors][j]
-        color = @args.state.colors[color_i]
-        slot = @args.state.tubes[i][:slots][j]
+      # @args.state.tubes[i][:colors].each_with_index do |color, j|
+      #   color_i = @args.state.tubes[i][:colors][j]
+      #   color = @args.state.colors[color_i]
+      #   slot = @args.state.tubes[i][:slots][j]
   
-        @args.outputs.solids << {
-          x: slot[0],
-          y: slot[1],
-          w: slot[2],
-          h: slot[3],
-          r: color[:r],
-          g: color[:g],
-          b: color[:b],
-          a: color[:a]
-        }
-      end
+      #   @args.outputs.solids << {
+      #     x: slot[0],
+      #     y: slot[1],
+      #     w: slot[2],
+      #     h: slot[3],
+      #     r: color[:r],
+      #     g: color[:g],
+      #     b: color[:b],
+      #     a: color[:a]
+      #   }
+      # end
+      @args.outputs.labels << [ 10, i * 20 + 124, tube.to_s ]
     end
+
+
+    @args.outputs.labels << [ 10, 60, "Source: " + @args.state.source.to_s ]
+    @args.outputs.labels << [ 10, 90, "Color: " + @args.state.color.to_s ]
   end
 
   def animate
@@ -102,7 +86,7 @@ class Tubes
 
   def source
     # A tube needs some colors to be a source
-    return unless @args.state.tubes[@clicked][:colors].sum > 0
+    return false unless @args.state.tubes[@clicked][:colors].sum > 0
 
     top = 0
 
@@ -116,13 +100,33 @@ class Tubes
     end
 
     # Make the color appear above the tube
-    @color = @args.state.tubes[@clicked][:colors][top]
+    @args.state.color = @args.state.tubes[@clicked][:colors][top]
 
     # Blank the source color
     @args.state.tubes[@clicked][:colors][top] = 0
-    @args.outputs.labels << [ 10, 60, "Source: " + @clicked.to_s + ', ' + top.to_s ]
+
+    @args.state.source = [@clicked, top]
+    return true
   end
 
   def destination
+    # There has to be room in the tube for another ball
+    return false unless @args.state.tubes[@clicked][:colors][@args.state.balls_per_tube - 1] == 0
+
+    # The destination must be different than the source
+    return false if @clicked == @source[0]
+
+    (0..@args.state.balls_per_tube - 1).each do |j|
+      if @args.state.tubes[@clicked][:colors][j] == 0
+        if j == 0 || @args.state.tubes[@clicked][:colors][j - 1] == @args.state.color
+          @args.state.tubes[@clicked][:colors][j] = @args.state.color
+          return true
+        end
+      end 
+    end
+
+    # Otherwise reset the source
+    @args.state.tubes[@args.state.source[0]][:colors][@args.state.source[1]] = @args.state.color
+    return false
   end
 end

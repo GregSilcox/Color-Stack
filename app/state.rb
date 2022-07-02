@@ -1,6 +1,7 @@
 class State
   SOURCE = "source"
   DESTINATION = "destination"
+  ERROR = "error"
 
   def initialize args
     @args = args
@@ -13,6 +14,10 @@ class State
 
   def reset!
     @args.state.current = SOURCE
+  end
+
+  def error!
+    @args.state.current = ERROR
   end
 
   def next
