@@ -3,7 +3,7 @@ class Tubes
 
   def initialize args
     @args = args
-    
+
     @x = args.state.x
     @y = args.state.y
     @w = args.state.w
@@ -25,30 +25,39 @@ class Tubes
 
   def display
     @args.state.tubes.each_with_index do |tube, i|
-      # @args.outputs.solids << tube.output
+      @args.outputs.solids << tube.output
 
-      # @args.state.tubes[i][:colors].each_with_index do |color, j|
-      #   color_i = @args.state.tubes[i][:colors][j]
-      #   color = @args.state.colors[color_i]
-      #   slot = @args.state.tubes[i][:slots][j]
-  
-      #   @args.outputs.solids << {
-      #     x: slot[0],
-      #     y: slot[1],
-      #     w: slot[2],
-      #     h: slot[3],
-      #     r: color[:r],
-      #     g: color[:g],
-      #     b: color[:b],
-      #     a: color[:a]
-      #   }
-      # end
-      @args.outputs.labels << [ 10, i * 20 + 124, tube.to_s ]
+      @args.state.tubes[i][:slots].each_with_index do |slot, j|
+        ball_id = slot[4]
+        color_id = @args.state.balls[ball_id][:color_id]
+        color = Colors::DATA[color_id]
+
+        @args.outputs.solids << {
+          x: slot[0],
+          y: slot[1],
+          w: slot[2],
+          h: slot[3],
+          r: color[:r],
+          g: color[:g],
+          b: color[:b],
+          a: color[:a]
+        }
+      end
     end
 
-
     @args.outputs.labels << [ 10, 60, "Source: " + @args.state.source.to_s ]
-    @args.outputs.labels << [ 10, 90, "Color: " + @args.state.color.to_s ]
+    @args.outputs.labels << [ 10, 90, "Destination: " + @args.state.destination.to_s ]
+  end
+
+  def self.label args
+    "Tubes: #{ args.state.tubes }"
+  end
+
+  def self.inspect x, y, args
+    args.state.tubes.each_with_index do |tube, j|
+      args.outputs.labels << [ x, y + 40 * j, "Slots: #{ tube[:slots] }" ]
+      args.outputs.labels << [ x, y + 40 * j + 20, "Rect: #{ tube[:rect] }"]
+    end
   end
 
   def animate
@@ -72,7 +81,7 @@ class Tubes
     return false unless @args.inputs.mouse.click
 
     # Of all the tubes ...
-    (0..@args.state.tubes_per_tray - 1).each do |i|
+    (0..Game::TUBES_PER_TRAY - 1).each do |i|
       # which was clicked in? ...
       if @args.inputs.mouse.inside_rect?(@args.state.tubes[i][:rect])
         @clicked = i
@@ -86,43 +95,52 @@ class Tubes
 
   def source
     # A tube needs some colors to be a source
-    return false unless @args.state.tubes[@clicked][:colors].sum > 0
+    slots = @args.state.tubes[@clicked][:slots]
+    balls = slots.map { |slot| @args.state.balls[slot[4]] }
+    colors = balls.map { |ball| ball[:color_id] }
 
+    return false unless colors.select { |color| color != 0 }.any?
+
+    @args.state.source = @args.state.tubes[@clicked]
+    return true
+
+    # The rest of this is needed for the move or animation
     top = 0
-
     # Of all the slots in the clicked tube ...
-    (@args.state.balls_per_tube - 1).downto(0).each do |j|
+    (Game::BALLS_PER_TUBE - 1).downto(0).each do |j|
       # which was the top?
-      if @args.state.tubes[@clicked][:colors][j] > 0
+      if colors[j] > 0
         top = j
         break
       end
     end
 
-    # Make the color appear above the tube
-    @args.state.color = @args.state.tubes[@clicked][:colors][top]
-
-    # Blank the source color
-    @args.state.tubes[@clicked][:colors][top] = 0
-
-    @args.state.source = [@clicked, top]
+    ball_id = @args.state.tubes[@clicked][:slots][top][4]
+    @args.state.source = @args.state.balls[ball_id]
+    @args.state.show = @args.state.source
     return true
   end
 
   def destination
     # There has to be room in the tube for another ball
-    return false unless @args.state.tubes[@clicked][:colors][@args.state.balls_per_tube - 1] == 0
+    ball_id = @args.state.tubes[@clicked][:slots][Game::BALLS_PER_TUBE - 1][4]
+    color_id = @args.state.balls[ball_id][:color_id]
+    return false unless color_id == 0
 
     # The destination must be different than the source
-    return false if @clicked == @source[0]
+    return false if @clicked == @args.state.source
 
+    @args.state.destination = @args.state.tubes[@clicked]
+    return true
+
+    # The rest of this is neede for the move or animation
     (0..@args.state.balls_per_tube - 1).each do |j|
       if @args.state.tubes[@clicked][:colors][j] == 0
         if j == 0 || @args.state.tubes[@clicked][:colors][j - 1] == @args.state.color
           @args.state.tubes[@clicked][:colors][j] = @args.state.color
           return true
         end
-      end 
+      end
     end
 
     # Otherwise reset the source

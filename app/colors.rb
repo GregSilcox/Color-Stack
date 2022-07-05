@@ -1,17 +1,6 @@
-def setup args
-  # Constants used in formulas
-  args.state.w = 25
-  args.state.x = 300
-  args.state.y = 200
-  args.state.tubes_per_tray = 12
-  args.state.balls_per_tube = 4
-
-  Balls.setup args
-  Tubes.setup args
-
-  # Values for the game colors
-  args.state.colors = [
-    { r:   0, g:   0, b:   0, a:   0 }, # 0: no color
+class Colors
+  DATA = [
+    { r:   0, g:   0, b:   0, a:  16 }, # 0: no color
     { r: 184, g:   3, b:  19, a: 255 }, # 11: red rhododendron
     { r:  28, g: 169, b: 201, a: 255 }, # 0: pacific blue
     { r:  28, g: 172, b: 120, a: 255 }, # 1: green
@@ -26,5 +15,11 @@ def setup args
     { r: 242, g:  40, b:  71, a: 255 } # 10: scarlet
   ]
 
-  args.state.once = true
+  def self.values id
+    DATA[id].values
+  end
+
+  def self.label id
+    "Color #{ id } values: #{ self.values id }"
+  end
 end

@@ -9,20 +9,20 @@ class Tube
   end
 
   def self.setup id, args
-    tx = args.state.w * id * 2 + args.state.x
+    tx = Game::W * id * 2 + Game::X
+    args.state.tubes[id] = {slots: []}
 
-    args.state.tubes[id] = {}
-
-    (0..@args.state.balls_per_tube - 1).each do |j|
-      ty = args.state.w * j + args.state.y
-      args.state.tubes[id][:slots] = [tx, ty, args.state.w, args.state.w ]
+    (0..Game::BALLS_PER_TUBE - 1).each do |j|
+      ty = Game::W * j + Game::Y
+      ball_id = Game::BALLS_PER_TUBE * id + j
+      args.state.tubes[id][:slots][j] = [tx, ty, Game::W, Game::W, ball_id ]
     end
 
     args.state.tubes[id][:rect] = [
       tx,
-      args.state.y,
-      args.state.w,
-      args.state.balls_per_tube * args.state.w
+      Game::Y,
+      Game::W,
+      Game::BALLS_PER_TUBE * Game::W
     ]
   end
 
@@ -39,7 +39,7 @@ class Tube
     }
   end
 
-  def labell
+  def self.label id, args
     "tube: "
   end
 end

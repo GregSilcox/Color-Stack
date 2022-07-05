@@ -1,6 +1,7 @@
 class State
   SOURCE = "source"
   DESTINATION = "destination"
+  ANIMATE = "animate"
   ERROR = "error"
 
   def initialize args
@@ -21,7 +22,17 @@ class State
   end
 
   def next
-    @args.state.current = @args.state.current == SOURCE ? DESTINATION : SOURCE
+    @args.state.current =
+      case @args.state.current
+      when SOURCE
+        DESTINATION
+      when DESTINATION
+        ANIMATE
+      when ANIMATE
+        SOURCE
+      else
+        ERROR
+      end
   end
 
   def display

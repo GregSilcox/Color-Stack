@@ -1,24 +1,30 @@
 class Balls
   def self.setup args
     args.state.balls = []
-    tubes = []
+    balls = []
 
-    (0..args.state.tubes_per_tray - 3).each do |i|
-      (0..args.state.balls_per_tube).each do |j|
-        tubes << Ball.setup(i, j, args) # Array.new args.state.balls_per_tube, i + 1
+    (0..Game::TUBES_PER_TRAY - 3).each do |i|
+      (0..Game::BALLS_PER_TUBE - 1).each do |j|
+        balls << Ball.setup(i, j, i + 1)
       end
     end
-  
-    unshuffled = tubes.flatten
 
     # Shuffle the order of the balls
-    while unshuffled.any? 
-      i = rand(unshuffled.length) - 1
-      e = unshuffled.delete_at i
-      args.state.balls.push e
+    while balls.any?
+      i = rand(balls.length) - 1
+      ball = balls.delete_at i
+      args.state.balls.push ball
     end
-  
+
     # Inital randomized order of colors, plus two empty tubes
-    args.state.balls += Array.new(args.state.balls_per_tube * 2, 0)
+    (Game::TUBES_PER_TRAY - 2..Game::TUBES_PER_TRAY - 1).each do |i|
+      (0..Game::BALLS_PER_TUBE - 1).each do |j|
+        args.state.balls << Ball.setup(i, j, 0)
+      end
+    end
+  end
+
+  def self.label args
+    "Balls count: #{ args.state.balls.size }"
   end
 end

@@ -1,14 +1,16 @@
 class Ball
-  def initialize id, args
-    @args = args
-
+  def initialize id
     @id = id
     @color_id = 0
     @rect = []
   end
 
-  def self.setup i, j, args
-    i + 1 # args.state.balls << i + 1
+  def self.setup i, j, c = 0
+    {
+      id: i * Game::BALLS_PER_TUBE + j,
+      color_id: c,
+      rect: []
+    }
   end
 
   def compute_rect
