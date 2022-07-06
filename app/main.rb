@@ -45,7 +45,12 @@ def tick args
     when State::SOURCE
       state.next if tubes.source
     when State::DESTINATION
-      tubes.destination ? state.next : state.error!
+      if tubes.destination
+        state.next
+        args.state.animate = "setup"
+      else 
+        state.error!
+      end
     when State::ANIMATE
       state.next if tubes.animate
     when State::ERROR

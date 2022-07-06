@@ -10,13 +10,6 @@ class Game
   end
 
   def self.setup args
-    # Constants used in formulas
-    args.state.w = W
-    args.state.x = X
-    args.state.y = Y
-    args.state.tubes_per_tray = TUBES_PER_TRAY
-    args.state.balls_per_tube = BALLS_PER_TUBE
-
     Balls.setup args
     Tubes.setup args
 
