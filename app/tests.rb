@@ -27,3 +27,4 @@ puts "running tests"
 $gtk.reset 100
 $gtk.log_level = :off
 $gtk.tests.start
+

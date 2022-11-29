@@ -13,23 +13,26 @@ class State
     @args.state.current
   end
 
-  def reset!
-    @args.state.current = SOURCE
+  def self.reset! args
+    args.state.current = SOURCE
   end
 
-  def error!
-    @args.state.current = ERROR
+  def self.error! args
+    args.state.current = ERROR
   end
 
-  def next
+  def tick tubes
     @args.state.current =
       case @args.state.current
       when SOURCE
-        DESTINATION
-      when DESTINATION
-        ANIMATE
-      when ANIMATE
-        SOURCE
+        tubes.source ? DESTINATION : SOURCE
+      when DESTINATION 
+        if tubes.destination
+          Animations.create @args
+          SOURCE
+        else
+          DESTINATION
+        end
       else
         ERROR
       end
